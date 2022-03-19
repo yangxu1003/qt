@@ -81,6 +81,10 @@ private slots:
 
     void on_horizontalSlider_2_valueChanged(int value);
 
+    void on_pushButton_4_clicked();//播放模式
+
+    void on_pushButton_2_clicked();
+
 private:
     Ui::MainWindow *ui;
 
@@ -105,6 +109,7 @@ private:
     bool m_IsPause = true;//判断播放器状态
     bool m_IsVolume = false;//判断音量状态
     int m_StackedIndex =0;              //获取当前页面索引
+    int m_IsMode=0;                     //判断播放模式0单曲1循环2单曲循环3随机播放
 
     JsonInfo JI;
     QMap<int,QString> lrcMap;           //保存歌词

@@ -21,9 +21,11 @@ MainWindow::MainWindow(QWidget *parent)
     //播放器
     player = new QMediaPlayer(this);
     //播放列表
-    playlist = new QMediaPlaylist(this);
+    playlist = new QMediaPlaylist(this);//网络播放
+
     //设置循环模式
     playlist->setPlaybackMode(QMediaPlaylist::Loop);
+
     //获取将播放列表要播放的文件
     player->setPlaylist(playlist);
 
@@ -86,6 +88,21 @@ MainWindow::MainWindow(QWidget *parent)
 
     //设置历史播放按钮
     ui->pushButton_16->setIcon(QPixmap(":/images/lishijilu.png"));
+
+    //设置在线搜索按钮
+    ui->pushButton_2->setIcon(QPixmap(":/images/sousuo.png"));
+
+    //加载动态图
+    m_movie = new QMovie(":/images/searchMovie.gif");
+    //设置动态图大小
+    m_si.setWidth(140);
+    m_si.setHeight(100);
+    m_movie->setScaledSize(m_si);
+    //标签加载动态图
+    ui->label_18->setMovie(m_movie);
+    //动态图开始
+    m_movie->start();
+    ui->label_18->hide();
 }
 
 
@@ -99,6 +116,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_clicked()
 {
     ui->stackedWidget->setCurrentIndex(0);
+    playlist->clear();
 }
 
 //历史播放
@@ -266,6 +284,7 @@ void MainWindow::search(QString str,int page = 1,int pagesize=30)
 
 void MainWindow::on_buttonSearch_clicked()
 {
+    ui->label_18->show();
     //清理缓存
     JI.m_Album_id.clear();
     JI.m_Album_name.clear();
@@ -273,7 +292,7 @@ void MainWindow::on_buttonSearch_clicked()
     JI.m_Hash.clear();
     JI.m_Singername.clear();
     JI.m_Songname_original.clear();
-    //ui->label_17->show();
+    ui->label_18->show();
     ui->label_28->show();
     //hideAll();
     ui->stackedWidget->setCurrentIndex(1);
@@ -354,7 +373,7 @@ JsonInfo MainWindow::parseJson(QString json)
             ui->tableWidget->setItem(i,3,new QTableWidgetItem(time));
             ui->tableWidget->item(i,3)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
     }
-    //ui->label_17->hide();
+    ui->label_18->hide();
     ui->label_28->hide();
     qDebug()<<"老大先出来";
     return JInfo;
@@ -392,13 +411,15 @@ void MainWindow::parseJsonSongInfo(QString json)
                        QJsonObject valuedataObject = valuedata.toObject();
                        //播放
                        QString url = getcontains(valuedataObject,"play_url");
+                       playlist->clear();
                        playlist->addMedia(QUrl::fromLocalFile(url));
-                       //ui->plainTextEdit->appendPlainText(url);
                        playlist->setCurrentIndex(playlist->mediaCount()-1);
+
                        m_IsPause = true;
                        //ui->pushButton_2->setStyleSheet("border-image: url(:/lib/1zantingtingzhi.png);");
                        player->play();
-                       //qDebug()<<"地址"<<url;
+                       qDebug()<<"地址"<<url;
+
                        //歌名显示
                        music.albumid = getcontains(valuedataObject,"album_id");
                        music.songname = getcontains(valuedataObject,"song_name");
@@ -502,7 +523,7 @@ void MainWindow::parseJsonSongInfo(QString json)
 
 //打开本地文件按钮
 void MainWindow::on_buttonOpen_clicked()
-{
+{ 
     QString curPash = QDir::currentPath();
     QString dlgTitle="选择音频文件";
     QString filter="音频文件(*.mp3 *.wav *.wma)mp3文件(*.mp3);;wav文件(*.wav);;wma文件(*.wma);;所有文件(*.*)";
@@ -522,14 +543,12 @@ void MainWindow::on_buttonOpen_clicked()
         //获取文件的相关信息，例如文件名等等。
         QFileInfo fileInfo(aFile);
         ui->listWidget->addItem(fileInfo.fileName());  //用于显示
-        //ui->plainTextEdit->appendPlainText(fileList.at(i)); //用于显示
     }
 
     if(player->state()!= QMediaPlayer::PlayingState)
     {
         playlist->setCurrentIndex(0);
     }
-    player->play();
 
 }
 
@@ -746,4 +765,43 @@ void MainWindow::on_close_btn_clicked()
 void MainWindow::on_horizontalSlider_2_valueChanged(int value)
 {
     player->setVolume(value);
+}
+
+//播放模式
+void MainWindow::on_pushButton_4_clicked()
+{
+    if(m_IsMode == 0)//单曲
+    {
+        ui->pushButton_4->setStyleSheet("border-image: url(:/images/danqu.png);");
+        m_IsMode++;
+        playlist->setPlaybackMode(QMediaPlaylist::CurrentItemOnce);
+        return;
+    }
+    if(m_IsMode == 1)//循环
+    {
+        ui->pushButton_4->setStyleSheet("border-image: url(:/images/xunhuan.png);");
+        m_IsMode++;
+        playlist->setPlaybackMode(QMediaPlaylist::Loop);
+        return;
+    }
+    if(m_IsMode == 2)//单曲循环
+    {
+        ui->pushButton_4->setStyleSheet("border-image: url(:/images/danquxunhuan.png);");
+        playlist->setPlaybackMode(QMediaPlaylist::CurrentItemInLoop);
+        m_IsMode++;
+        return;
+    }
+    if(m_IsMode == 3)//随机
+    {
+        ui->pushButton_4->setStyleSheet("border-image: url(:/images/suiji.png);");
+        m_IsMode =0;
+        playlist->setPlaybackMode(QMediaPlaylist::Random);
+        return;
+    }
+}
+
+//在线搜索列表按钮
+void MainWindow::on_pushButton_2_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(1);
 }
